@@ -2,7 +2,7 @@ from pycocoevalcap.bleu.bleu import Bleu
 from pycocoevalcap.meteor import Meteor
 from pycocoevalcap.rouge import Rouge
 
-
+import pandas as pd
 def compute_scores(gts, res):
     """
     Performs the MS COCO evaluation using the Python 3 implementation (https://github.com/salaniz/pycocoevalcap)
@@ -11,7 +11,13 @@ def compute_scores(gts, res):
     :param res: Dictionary with the image ids ant their generated captions
     :print: Evaluation score (the mean of the scores of all the instances) for each measure
     """
+    # first save the ground truth captions
+    df = pd.DataFrame.from_dict(gts, orient="index")
+    df.to_csv('/content/gold.csv', sep='\t', header=False)
 
+    # then save the predicted ones    
+    df = pd.DataFrame.from_dict(res, orient="index")
+    df.to_csv('/content/pred.csv', sep='\t', header=False)
     # Set up scorers
     scorers = [
         (Bleu(4), ["BLEU_1", "BLEU_2", "BLEU_3", "BLEU_4"]),

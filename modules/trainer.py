@@ -204,6 +204,7 @@ class Trainer(BaseTrainer):
         self.model.eval()
         with torch.no_grad():
             val_gts, val_res = [], []
+            val_images_list = list()
             for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
                 images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(
                     self.device), reports_masks.to(self.device)
@@ -212,9 +213,23 @@ class Trainer(BaseTrainer):
                 ground_truths = self.model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
                 val_res.extend(reports)
                 val_gts.extend(ground_truths)
-            val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)},
-                                       {i: [re] for i, re in enumerate(val_res)})
+                val_images_list.extend(images_id)
+            val_met = self.metric_ftns({i: [gt] for i, gt in zip(val_images_list, val_gts)},
+                                    {i: [re] for i, re in zip(val_images_list, val_res)})
             log.update(**{'val_' + k: v for k, v in val_met.items()})
+        # with torch.no_grad():
+        #     val_gts, val_res = [], []
+        #     for batch_idx, (images_id, images, reports_ids, reports_masks) in enumerate(self.val_dataloader):
+        #         images, reports_ids, reports_masks = images.to(self.device), reports_ids.to(
+        #             self.device), reports_masks.to(self.device)
+        #         output = self.model(images, mode='sample')
+        #         reports = self.model.tokenizer.decode_batch(output.cpu().numpy())
+        #         ground_truths = self.model.tokenizer.decode_batch(reports_ids[:, 1:].cpu().numpy())
+        #         val_res.extend(reports)
+        #         val_gts.extend(ground_truths)
+        #     val_met = self.metric_ftns({i: [gt] for i, gt in enumerate(val_gts)},
+        #                                {i: [re] for i, re in enumerate(val_res)})
+        #     log.update(**{'val_' + k: v for k, v in val_met.items()})
 
         self.model.eval()
         with torch.no_grad():
